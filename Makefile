@@ -22,7 +22,7 @@ ECS_CNI_REPOSITORY_REVISION=master
 ECS_CNI_REPOSITORY_SRC_DIR=$(PWD)/amazon-ecs-cni-plugins
 
 
-.PHONY: all gobuild static docker release certs test clean netkitten test-registry run-functional-tests gremlin benchmark-test gogenerate run-integ-tests image-cleanup-test-images pause-container get-cni-sources cni-plugins
+.PHONY: all gobuild static docker release certs test clean netkitten test-registry run-functional-tests gremlin benchmark-test gogenerate run-integ-tests image-cleanup-test-images pause-container get-cni-sources cni-plugins test-artifacts test-artifacts-in-docker
 
 all: docker
 
@@ -35,10 +35,12 @@ gobuild:
 static:
 	./scripts/build
 
+.dockerbuild:
+	@docker build -f scripts/dockerfiles/Dockerfile.build -t "amazon/amazon-ecs-agent-build:make" .
+
 # 'build-in-docker' builds the agent within a dockerfile and saves it to the ./out
 # directory
-build-in-docker:
-	@docker build -f scripts/dockerfiles/Dockerfile.build -t "amazon/amazon-ecs-agent-build:make" .
+build-in-docker: .dockerbuild
 	@docker run --net=none \
 	  -e TARGET_OS="${TARGET_OS}" \
 	  -e LDFLAGS="-X github.com/aws/amazon-ecs-agent/agent/config.DefaultPauseContainerTag=$(PAUSE_CONTAINER_TAG) \
@@ -90,6 +92,9 @@ test-silent:
 benchmark-test:
 	. ./scripts/shared_env && go test -run=XX -bench=. $(shell go list ./agent/... | grep -v /vendor/)
 
+test-artifacts:
+	./scripts/build-test-artifacts
+
 # Run our 'test' registry needed for integ and functional tests
 test-registry: netkitten volumes-test squid awscli image-cleanup-test-images fluentd
 	@./scripts/setup-test-registry
@@ -98,6 +103,13 @@ test-in-docker:
 	docker build -f scripts/dockerfiles/Dockerfile.test -t "amazon/amazon-ecs-agent-test:make" .
 	# Privileged needed for docker-in-docker so integ tests pass
 	docker run --net=none -v "$(PWD):/go/src/github.com/aws/amazon-ecs-agent" --privileged "amazon/amazon-ecs-agent-test:make"
+
+test-artifacts-in-docker: .dockerbuild
+	@docker run --net=none \
+		-v "$(PWD)/out:/out" \
+		-v "$(PWD):/go/src/github.com/aws/amazon-ecs-agent" \
+		"amazon/amazon-ecs-agent-build:make" \
+		make test-artifacts
 
 run-functional-tests: testnnp test-registry
 	. ./scripts/shared_env && go test -tags functional -timeout=30m -v ./agent/functional_tests/...
@@ -180,3 +192,4 @@ clean:
 	-$(MAKE) -C misc/testnnp $(MFLAGS) clean
 	-$(MAKE) -C misc/image-cleanup-test-images $(MFLAGS) clean
 	-rm -f .get-deps-stamp
+

@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - make test-artifacts-in-docker
+  post_build:
+    commands:
+      - cp out/test-artifacts/*.exe .
+artifacts:
+  files:
+      - 'agent.exe'
+      - 'windows-simple-tests.exe'
+      - 'windows-handwritten-tests.exe'
+      - 'misc/windows-deploy/hostsetup.ps1'
+      - 'agent/functional_tests/testdata/**/*'
+  discard-paths: no
