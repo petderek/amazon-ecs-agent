@@ -38,9 +38,13 @@ static:
 builder-image:
 	@docker build -f scripts/dockerfiles/Dockerfile.build -t "amazon/amazon-ecs-agent-build:make" .
 
+out-dir:
+	mkdir -p ./out/test-artifacts
+	mkdir -p ./out/cni-plugins
+
 # 'build-in-docker' builds the agent within a dockerfile and saves it to the ./out
 # directory
-build-in-docker: builder-image
+build-in-docker: builder-image out-dir
 	@docker run --net=none \
 	  -e TARGET_OS="${TARGET_OS}" \
 	  -e LDFLAGS="-X github.com/aws/amazon-ecs-agent/agent/config.DefaultPauseContainerTag=$(PAUSE_CONTAINER_TAG) \
@@ -58,7 +62,7 @@ docker: certs build-in-docker pause-container-release cni-plugins
 
 # 'docker-release' builds the agent from a clean snapshot of the git repo in
 # 'RELEASE' mode
-docker-release: pause-container-release cni-plugins
+docker-release: pause-container-release cni-plugins out-dir
 	@docker build -f scripts/dockerfiles/Dockerfile.cleanbuild -t "amazon/amazon-ecs-agent-cleanbuild:make" .
 	@docker run --net=none \
 	  -e TARGET_OS="${TARGET_OS}" \
@@ -92,7 +96,7 @@ test-silent:
 benchmark-test:
 	. ./scripts/shared_env && go test -run=XX -bench=. $(shell go list ./agent/... | grep -v /vendor/)
 
-test-artifacts:
+test-artifacts: out-dir
 	mkdir -p ./out/test-artifacts
 	go test -race -tags integration -o ./out/test-artifacts/unix-engine-tests -c ./agent/engine
 	go test -race -tags integration -o ./out/test-artifacts/unix-stats-tests -c ./agent/stats
@@ -106,7 +110,13 @@ test-artifacts:
 	GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go test -race -tags integration -o ./out/test-artifacts/windows-app-tests.exe -c ./agent/app
 	GOOS=windows go test -tags functional -o ./out/test-artifacts/windows-simple-tests.exe -c ./agent/functional_tests/tests/generated/simpletests_windows/
 	GOOS=windows go test -tags functional -o ./out/test-artifacts/windows-handwritten-tests.exe -c ./agent/functional_tests/tests/
-	GOOS=windows go build -o out/test-artifacts/agent.exe ./agent
+
+test-artifacts-in-docker: builder-image out-dir
+	@docker run --net=none \
+		-v "$(PWD)/out:/out" \
+		-v "$(PWD):/go/src/github.com/aws/amazon-ecs-agent" \
+		"amazon/amazon-ecs-agent-build:make" \
+		make test-artifacts
 
 # Run our 'test' registry needed for integ and functional tests
 test-registry: netkitten volumes-test squid awscli image-cleanup-test-images fluentd
@@ -117,17 +127,10 @@ test-in-docker:
 	# Privileged needed for docker-in-docker so integ tests pass
 	docker run --net=none -v "$(PWD):/go/src/github.com/aws/amazon-ecs-agent" --privileged "amazon/amazon-ecs-agent-test:make"
 
-test-artifacts-in-docker: builder-image
-	@docker run --net=none \
-		-v "$(PWD)/out:/out" \
-		-v "$(PWD):/go/src/github.com/aws/amazon-ecs-agent" \
-		"amazon/amazon-ecs-agent-build:make" \
-		make test-artifacts
-
 run-functional-tests: testnnp test-registry
 	. ./scripts/shared_env && go test -tags functional -timeout=30m -v ./agent/functional_tests/...
 
-pause-container:
+pause-container: out-dir
 	@docker build -f scripts/dockerfiles/Dockerfile.buildPause -t "amazon/amazon-ecs-build-pause-bin:make" .
 	@docker run --net=none \
 		-v "$(PWD)/misc/pause-container:/out" \
@@ -137,16 +140,14 @@ pause-container:
 	$(MAKE) -C misc/pause-container $(MFLAGS)
 	@docker rmi -f "amazon/amazon-ecs-build-pause-bin:make"
 
-pause-container-release: pause-container
-	mkdir -p "$(PWD)/out"
+pause-container-release: pause-container out-dir
 	@docker save ${PAUSE_CONTAINER_IMAGE}:${PAUSE_CONTAINER_TAG} > "$(PWD)/out/${PAUSE_CONTAINER_TARBALL}"
 
 get-cni-sources:
 	git submodule update --init --checkout
 
-cni-plugins: get-cni-sources
+cni-plugins: get-cni-sources out-dir
 	@docker build -f scripts/dockerfiles/Dockerfile.buildCNIPlugins -t "amazon/amazon-ecs-build-cniplugins:make" .
-	mkdir -p out/cni-plugins
 	docker run --rm --net=none \
 		-e GIT_SHORT_HASH=$(shell cd $(ECS_CNI_REPOSITORY_SRC_DIR) && git rev-parse --short HEAD) \
 		-e GIT_PORCELAIN=$(shell cd $(ECS_CNI_REPOSITORY_SRC_DIR) && git status --porcelain 2> /dev/null | wc -l | sed 's/^ *//') \
@@ -160,6 +161,7 @@ run-integ-tests: test-registry gremlin
 
 codebuild: docker test-artifacts-in-docker
 	docker save -o ./out/test-artifacts/agent.tar "amazon/amazon-ecs-agent:make"
+	TARGET_OS="windows" ./scripts/build
 
 netkitten:
 	$(MAKE) -C misc/netkitten $(MFLAGS)
