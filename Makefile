@@ -35,12 +35,12 @@ gobuild:
 static:
 	./scripts/build
 
-.dockerbuild:
+builder-image:
 	@docker build -f scripts/dockerfiles/Dockerfile.build -t "amazon/amazon-ecs-agent-build:make" .
 
 # 'build-in-docker' builds the agent within a dockerfile and saves it to the ./out
 # directory
-build-in-docker: .dockerbuild
+build-in-docker: builder-image
 	@docker run --net=none \
 	  -e TARGET_OS="${TARGET_OS}" \
 	  -e LDFLAGS="-X github.com/aws/amazon-ecs-agent/agent/config.DefaultPauseContainerTag=$(PAUSE_CONTAINER_TAG) \
@@ -117,7 +117,7 @@ test-in-docker:
 	# Privileged needed for docker-in-docker so integ tests pass
 	docker run --net=none -v "$(PWD):/go/src/github.com/aws/amazon-ecs-agent" --privileged "amazon/amazon-ecs-agent-test:make"
 
-test-artifacts-in-docker: .dockerbuild
+test-artifacts-in-docker: builder-image
 	@docker run --net=none \
 		-v "$(PWD)/out:/out" \
 		-v "$(PWD):/go/src/github.com/aws/amazon-ecs-agent" \
@@ -158,7 +158,7 @@ cni-plugins: get-cni-sources
 run-integ-tests: test-registry gremlin
 	. ./scripts/shared_env && go test -race -tags integration -timeout=5m -v ./agent/engine/... ./agent/stats/... ./agent/app/...
 
-.codebuild: docker test-artifacts-in-docker
+codebuild: docker test-artifacts-in-docker
 	docker save -o ./out/test-artifacts/agent.tar "amazon/amazon-ecs-agent:make"
 
 netkitten:
