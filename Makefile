@@ -100,9 +100,10 @@ test-artifacts:
 	go test -tags functional -o ./out/test-artifacts/unix-simple-tests -c ./agent/functional_tests/tests/generated/simpletests_unix/
 	go test -tags functional -o ./out/test-artifacts/unix-handwritten-tests -c ./agent/functional_tests/tests/
 
-	GOOS=windows go test -race -tags integration -o ./out/test-artifacts/windows-engine-tests.exe -c ./agent/engine
-	GOOS=windows go test -race -tags integration -o ./out/test-artifacts/windows-stats-tests.exe -c ./agent/stats
-	GOOS=windows go test -race -tags integration -o ./out/test-artifacts/windows-app-tests.exe -c ./agent/app
+  # Race detector on windows requires CGO
+	GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go test -race -tags integration -o ./out/test-artifacts/windows-engine-tests.exe -c ./agent/engine
+	GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go test -race -tags integration -o ./out/test-artifacts/windows-stats-tests.exe -c ./agent/stats
+	GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go test -race -tags integration -o ./out/test-artifacts/windows-app-tests.exe -c ./agent/app
 	GOOS=windows go test -tags functional -o ./out/test-artifacts/windows-simple-tests.exe -c ./agent/functional_tests/tests/generated/simpletests_windows/
 	GOOS=windows go test -tags functional -o ./out/test-artifacts/windows-handwritten-tests.exe -c ./agent/functional_tests/tests/
 	GOOS=windows go build -o out/test-artifacts/agent.exe ./agent
