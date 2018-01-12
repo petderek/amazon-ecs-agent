@@ -92,14 +92,13 @@ test-silent:
 benchmark-test:
 	. ./scripts/shared_env && go test -run=XX -bench=. $(shell go list ./agent/... | grep -v /vendor/)
 
-test-artifacts: docker
+test-artifacts:
 	mkdir -p ./out/test-artifacts
 	go test -race -tags integration -o ./out/test-artifacts/unix-engine-tests -c ./agent/engine
 	go test -race -tags integration -o ./out/test-artifacts/unix-stats-tests -c ./agent/stats
 	go test -race -tags integration -o ./out/test-artifacts/unix-app-tests -c ./agent/app
 	go test -tags functional -o ./out/test-artifacts/unix-simple-tests -c ./agent/functional_tests/tests/generated/simpletests_unix/
 	go test -tags functional -o ./out/test-artifacts/unix-handwritten-tests -c ./agent/functional_tests/tests/
-	docker save -o ./out/test-artifacts/agent.tar "amazon/amazon-ecs-agent:make"
 
 	# Race detector on windows requires CGO
 	GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go test -race -tags integration -o ./out/test-artifacts/windows-engine-tests.exe -c ./agent/engine
@@ -158,6 +157,9 @@ cni-plugins: get-cni-sources
 
 run-integ-tests: test-registry gremlin
 	. ./scripts/shared_env && go test -race -tags integration -timeout=5m -v ./agent/engine/... ./agent/stats/... ./agent/app/...
+
+.codebuild: docker test-artifacts-in-docker
+	docker save -o ./out/test-artifacts/agent.tar "amazon/amazon-ecs-agent:make"
 
 netkitten:
 	$(MAKE) -C misc/netkitten $(MFLAGS)

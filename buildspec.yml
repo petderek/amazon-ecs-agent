@@ -3,14 +3,10 @@ version: 0.2
 phases:
   build:
     commands:
-      - make test-artifacts-in-docker
-  post_build:
-    commands:
-      - cp out/test-artifacts/agent.exe .
+      - make .codebuild 
 artifacts:
   files:
-      - 'agent.exe'
-      - 'misc/windows-deploy/hostsetup.ps1'
       - 'out/**/*'
+      - 'misc/windows-deploy/hostsetup.ps1'
       - 'agent/functional_tests/testdata/**/*'
   discard-paths: no
