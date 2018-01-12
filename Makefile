@@ -92,15 +92,16 @@ test-silent:
 benchmark-test:
 	. ./scripts/shared_env && go test -run=XX -bench=. $(shell go list ./agent/... | grep -v /vendor/)
 
-test-artifacts:
+test-artifacts: docker
 	mkdir -p ./out/test-artifacts
 	go test -race -tags integration -o ./out/test-artifacts/unix-engine-tests -c ./agent/engine
 	go test -race -tags integration -o ./out/test-artifacts/unix-stats-tests -c ./agent/stats
 	go test -race -tags integration -o ./out/test-artifacts/unix-app-tests -c ./agent/app
 	go test -tags functional -o ./out/test-artifacts/unix-simple-tests -c ./agent/functional_tests/tests/generated/simpletests_unix/
 	go test -tags functional -o ./out/test-artifacts/unix-handwritten-tests -c ./agent/functional_tests/tests/
+	docker save -o ./out/test-artifacts/agent.tar "amazon/amazon-ecs-agent:make"
 
-  # Race detector on windows requires CGO
+	# Race detector on windows requires CGO
 	GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go test -race -tags integration -o ./out/test-artifacts/windows-engine-tests.exe -c ./agent/engine
 	GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go test -race -tags integration -o ./out/test-artifacts/windows-stats-tests.exe -c ./agent/stats
 	GOOS=windows CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc go test -race -tags integration -o ./out/test-artifacts/windows-app-tests.exe -c ./agent/app
@@ -126,9 +127,6 @@ test-artifacts-in-docker: .dockerbuild
 
 run-functional-tests: testnnp test-registry
 	. ./scripts/shared_env && go test -tags functional -timeout=30m -v ./agent/functional_tests/...
-
-# Aggregate all of the automated bits into one target
-.codebuild: dockerbuild test-artifacts-in-docker windows-agent-in-docker
 
 pause-container:
 	@docker build -f scripts/dockerfiles/Dockerfile.buildPause -t "amazon/amazon-ecs-build-pause-bin:make" .
