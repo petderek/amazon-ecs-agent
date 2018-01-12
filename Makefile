@@ -93,7 +93,19 @@ benchmark-test:
 	. ./scripts/shared_env && go test -run=XX -bench=. $(shell go list ./agent/... | grep -v /vendor/)
 
 test-artifacts:
-	./scripts/build-test-artifacts
+	mkdir -p ./out/test-artifacts
+	go test -race -tags integration -o ./out/test-artifacts/unix-engine-tests -c ./agent/engine
+	go test -race -tags integration -o ./out/test-artifacts/unix-stats-tests -c ./agent/stats
+	go test -race -tags integration -o ./out/test-artifacts/unix-app-tests -c ./agent/app
+	go test -tags functional -o ./out/test-artifacts/unix-simple-tests -c ./agent/functional_tests/tests/generated/simpletests_unix/
+	go test -tags functional -o ./out/test-artifacts/unix-handwritten-tests -c ./agent/functional_tests/tests/
+
+	GOOS=windows go test -race -tags integration -o ./out/test-artifacts/windows-engine-tests.exe -c ./agent/engine
+	GOOS=windows go test -race -tags integration -o ./out/test-artifacts/windows-stats-tests.exe -c ./agent/stats
+	GOOS=windows go test -race -tags integration -o ./out/test-artifacts/windows-app-tests.exe -c ./agent/app
+	GOOS=windows go test -tags functional -o ./out/test-artifacts/windows-simple-tests.exe -c ./agent/functional_tests/tests/generated/simpletests_windows/
+	GOOS=windows go test -tags functional -o ./out/test-artifacts/windows-handwritten-tests.exe -c ./agent/functional_tests/tests/
+	GOOS=windows go build -o out/test-artifacts/agent.exe ./agent
 
 # Run our 'test' registry needed for integ and functional tests
 test-registry: netkitten volumes-test squid awscli image-cleanup-test-images fluentd
@@ -114,8 +126,8 @@ test-artifacts-in-docker: .dockerbuild
 run-functional-tests: testnnp test-registry
 	. ./scripts/shared_env && go test -tags functional -timeout=30m -v ./agent/functional_tests/...
 
-testnnp:
-	$(MAKE) -C misc/testnnp $(MFLAGS)
+# Aggregate all of the automated bits into one target
+.codebuild: dockerbuild test-artifacts-in-docker windows-agent-in-docker
 
 pause-container:
 	@docker build -f scripts/dockerfiles/Dockerfile.buildPause -t "amazon/amazon-ecs-build-pause-bin:make" .
@@ -171,6 +183,9 @@ fluentd:
 
 image-cleanup-test-images:
 	$(MAKE) -C misc/image-cleanup-test-images $(MFLAGS)
+
+testnnp:
+	$(MAKE) -C misc/testnnp $(MFLAGS)
 
 .get-deps-stamp:
 	go get golang.org/x/tools/cmd/cover
