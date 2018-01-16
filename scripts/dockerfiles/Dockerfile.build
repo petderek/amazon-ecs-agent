@@ -17,10 +17,8 @@ MAINTAINER Amazon Web Services, Inc.
 RUN apt-get update && \
     apt-get install -y gcc-mingw-w64
 
-RUN mkdir -p /go/src/github.com/aws/ && \
-    mkdir -p /out
+RUN mkdir -p /go/src/github.com/aws/
 
-VOLUME ['/out']
 WORKDIR /go/src/github.com/aws/amazon-ecs-agent
 
 CMD ["make", "static"]

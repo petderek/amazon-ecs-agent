@@ -32,6 +32,9 @@ all: docker
 gobuild:
 	./scripts/build false
 
+out:
+	mkdir ./out
+
 # Basic go build
 static:
 	./scripts/build
@@ -45,14 +48,15 @@ build-in-docker: builder-image
 	@docker run --net=none \
 	  -e TARGET_OS="${TARGET_OS}" \
 	  -e LDFLAGS="-X github.com/aws/amazon-ecs-agent/agent/config.DefaultPauseContainerTag=$(PAUSE_CONTAINER_TAG) \
-	  -X github.com/aws/amazon-ecs-agent/agent/config.DefaultPauseContainerImageName=$(PAUSE_CONTAINER_IMAGE)" \-v "$(PWD)/out:/out" \
+	  -X github.com/aws/amazon-ecs-agent/agent/config.DefaultPauseContainerImageName=$(PAUSE_CONTAINER_IMAGE)" \
+		-v "$(PWD)/out:/out" \
 		-u "$(UID)" \
 	  -v "$(PWD):/go/src/github.com/aws/amazon-ecs-agent" \
 	  "amazon/amazon-ecs-agent-build:make"
 
 # 'docker' builds the agent dockerfile from the current sourcecode tree, dirty
 # or not
-docker: certs build-in-docker pause-container-release cni-plugins
+docker: out certs build-in-docker pause-container-release cni-plugins
 	@cd scripts && ./create-amazon-ecs-scratch
 	@docker build -f scripts/dockerfiles/Dockerfile.release -t "amazon/amazon-ecs-agent:make" .
 	@echo "Built Docker image \"amazon/amazon-ecs-agent:make\""
@@ -94,7 +98,8 @@ test-silent:
 benchmark-test:
 	. ./scripts/shared_env && go test -run=XX -bench=. $(shell go list ./agent/... | grep -v /vendor/)
 
-test-artifacts:
+test-artifacts: 
+	mkdir -p out/test-artifacts
 	go test -race -tags integration -o ./out/test-artifacts/unix-engine-tests -c ./agent/engine
 	go test -race -tags integration -o ./out/test-artifacts/unix-stats-tests -c ./agent/stats
 	go test -race -tags integration -o ./out/test-artifacts/unix-app-tests -c ./agent/app
@@ -108,7 +113,7 @@ test-artifacts:
 	GOOS=windows go test -tags functional -o ./out/test-artifacts/windows-simple-tests.exe -c ./agent/functional_tests/tests/generated/simpletests_windows/
 	GOOS=windows go test -tags functional -o ./out/test-artifacts/windows-handwritten-tests.exe -c ./agent/functional_tests/tests/
 
-test-artifacts-in-docker: builder-image
+test-artifacts-in-docker: out builder-image
 	@docker run --net=none \
     -u "$(UID)" \
 		-v "$(PWD)/out:/out" \
@@ -146,11 +151,12 @@ get-cni-sources:
 	git submodule update --init --checkout
 
 cni-plugins: get-cni-sources
+	mkdir out/cni-plugins
 	@docker build -f scripts/dockerfiles/Dockerfile.buildCNIPlugins -t "amazon/amazon-ecs-build-cniplugins:make" .
 	docker run --rm --net=none \
 		-e GIT_SHORT_HASH=$(shell cd $(ECS_CNI_REPOSITORY_SRC_DIR) && git rev-parse --short HEAD) \
 		-e GIT_PORCELAIN=$(shell cd $(ECS_CNI_REPOSITORY_SRC_DIR) && git status --porcelain 2> /dev/null | wc -l | sed 's/^ *//') \
-		-u "$(UID)"
+		-u "$(UID)" \
 		-v "$(PWD)/out/cni-plugins:/go/src/github.com/aws/amazon-ecs-cni-plugins/bin/plugins" \
 		-v "$(ECS_CNI_REPOSITORY_SRC_DIR):/go/src/github.com/aws/amazon-ecs-cni-plugins" \
 		"amazon/amazon-ecs-build-cniplugins:make"
@@ -159,7 +165,7 @@ cni-plugins: get-cni-sources
 run-integ-tests: test-registry gremlin
 	. ./scripts/shared_env && go test -race -tags integration -timeout=5m -v ./agent/engine/... ./agent/stats/... ./agent/app/...
 
-codebuild: docker test-artifacts-in-docker
+codebuild: out docker test-artifacts-in-docker
 	docker save -o ./out/test-artifacts/agent.tar "amazon/amazon-ecs-agent:make"
 	TARGET_OS="windows" ./scripts/build
 
