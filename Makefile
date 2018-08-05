@@ -155,7 +155,7 @@ out/test-artifacts/windows-simple-tests.exe: $(ALL_GO_FILES) .out-stamp .builder
 out/test-artifacts/windows-handwritten-tests.exe: $(ALL_GO_FILES) .out-stamp .builder-image-stamp
 	$(call win-cgo-dockerbuild,$(GO_FUNCTIONAL_TEST) $@ ./agent/functional_tests/tests)
 
-##.PHONY: test-artifacts-windows test-artifacts-linux test-artifacts
+.PHONY: test-artifacts-windows test-artifacts-linux test-artifacts
 
 WINDOWS_ARTIFACTS_TARGETS := out/test-artifacts/windows-engine-tests.exe out/test-artifacts/windows-stats-tests.exe
 WINDOWS_ARTIFACTS_TARGETS += out/test-artifacts/windows-app-tests.exe out/test-artifacts/windows-simple-tests.exe
@@ -228,7 +228,7 @@ run-sudo-tests:
 	. ./scripts/shared_env && sudo -E ${GO_EXECUTABLE} test -race -tags sudo -timeout=1m -v ./agent/engine/...
 
 .PHONY: codebuild
-codebuild: get-deps test-artifacts .out-stamp
+codebuild: test-artifacts .out-stamp
 	$(MAKE) release TARGET_OS="linux"
 	TARGET_OS="linux" ./scripts/local-save
 	$(MAKE) docker-release TARGET_OS="windows"
