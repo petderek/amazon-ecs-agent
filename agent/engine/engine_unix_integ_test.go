@@ -50,8 +50,8 @@ const (
 	testRegistryHost      = "127.0.0.1:51670"
 	testBusyboxImage      = testRegistryHost + "/busybox:latest"
 	testAuthRegistryHost  = "127.0.0.1:51671"
-	testAuthRegistryImage = "127.0.0.1:51671/amazon/amazon-ecs-netkitten:latest"
-	testVolumeImage       = "127.0.0.1:51670/amazon/amazon-ecs-volumes-test:latest"
+	testAuthRegistryImage = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/amazon-ecs-netkitten:latest"
+	testVolumeImage       = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/amazon-ecs-volumes-test:latest"
 	testAuthUser          = "user"
 	testAuthPass          = "swordfish"
 )

@@ -27,7 +27,8 @@ import (
 )
 
 var (
-	testImageName = "amazon/amazon-ecs-gremlin:make"
+	//TODO
+	testImageName = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/gremlin"
 	endpoint      = utils.DefaultIfBlank(os.Getenv(ecsengine.DockerEndpointEnvVariable), ecsengine.DockerDefaultEndpoint)
 	client, _     = docker.NewClient(endpoint)
 	clientFactory = clientfactory.NewFactory(context.TODO(), endpoint)

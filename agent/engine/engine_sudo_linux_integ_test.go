@@ -36,7 +36,7 @@ import (
 )
 
 const (
-	testVolumeImage = "127.0.0.1:51670/amazon/amazon-ecs-volumes-test:latest"
+	testVolumeImage = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/amazon-ecs-volumes-test:latest"
 )
 
 func TestStartStopWithCgroup(t *testing.T) {

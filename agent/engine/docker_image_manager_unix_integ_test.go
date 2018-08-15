@@ -18,17 +18,17 @@
 package engine
 
 const (
-	test1Image1Name = "127.0.0.1:51670/amazon/image-cleanup-test-image1:latest"
-	test1Image2Name = "127.0.0.1:51670/amazon/image-cleanup-test-image2:latest"
-	test1Image3Name = "127.0.0.1:51670/amazon/image-cleanup-test-image3:latest"
+	test1Image1Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image1:latest"
+	test1Image2Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image2:latest"
+	test1Image3Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image3:latest"
 
-	test2Image1Name = "127.0.0.1:51670/amazon/image-cleanup-test-image1:latest"
-	test2Image2Name = "127.0.0.1:51670/amazon/image-cleanup-test-image2:latest"
-	test2Image3Name = "127.0.0.1:51670/amazon/image-cleanup-test-image3:latest"
+	test2Image1Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image1:latest"
+	test2Image2Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image2:latest"
+	test2Image3Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image3:latest"
 
-	test3Image1Name = "127.0.0.1:51670/amazon/image-cleanup-test-image1:latest"
-	test3Image2Name = "127.0.0.1:51670/amazon/image-cleanup-test-image2:latest"
-	test3Image3Name = "127.0.0.1:51670/amazon/image-cleanup-test-image3:latest"
+	test3Image1Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image1:latest"
+	test3Image2Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image2:latest"
+	test3Image3Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image3:latest"
 
-	test4Image1Name = "127.0.0.1:51670/amazon/image-cleanup-test-image1:latest"
+	test4Image1Name = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/image-cleanup-test-image1:latest"
 )

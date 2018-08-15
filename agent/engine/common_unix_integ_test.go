@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	testRegistryImage = "127.0.0.1:51670/amazon/amazon-ecs-netkitten:latest"
+	testRegistryImage = "264890003135.dkr.ecr.us-west-2.amazonaws.com/linux/amazon-ecs-netkitten:latest"
 	dockerEndpoint    = "unix:///var/run/docker.sock"
 )
 
