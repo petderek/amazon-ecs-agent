@@ -180,7 +180,7 @@ test-in-docker:
 	# Privileged needed for docker-in-docker so integ tests pass
 	docker run --net=none -v "$(PWD):/go/src/github.com/aws/amazon-ecs-agent" --privileged "amazon/amazon-ecs-agent-test:make"
 
-run-functional-tests: testnnp test-registry ecr-execution-role-image telemetry-test-image
+run-functional-tests: 
 	. ./scripts/shared_env && go test -tags functional -timeout=30m -v ./agent/functional_tests/...
 
 build-image-for-ecr: netkitten volumes-test squid awscli image-cleanup-test-images fluentd taskmetadata-validator testnnp container-health-check-image telemetry-test-image ecr-execution-role-image-for-upload
@@ -227,7 +227,7 @@ cni-plugins: get-cni-sources .out-stamp
 		"amazon/amazon-ecs-build-cniplugins:make"
 	@echo "Built amazon-ecs-cni-plugins successfully."
 
-run-integ-tests: test-registry gremlin container-health-check-image run-sudo-tests
+run-integ-tests: run-sudo-tests
 	. ./scripts/shared_env && go test -race -tags integration -timeout=7m -v ./agent/engine/... ./agent/stats/... ./agent/app/...
 
 run-sudo-tests:
