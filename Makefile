@@ -89,7 +89,7 @@ misc/certs/ca-certificates.crt:
 	docker run "amazon/amazon-ecs-agent-cert-source:make" cat /etc/ssl/certs/ca-certificates.crt > misc/certs/ca-certificates.crt
 
 test:
-	. ./scripts/shared_env && go test -race -tags unit -timeout=25s -v -cover $(shell go list ./agent/... | grep -v /vendor/)
+	. ./scripts/shared_env && go test -tags unit -timeout=25s -v -cover $(shell go list ./agent/... | grep -v /vendor/)
 
 test-silent:
 	. ./scripts/shared_env && go test -timeout=25s -cover $(shell go list ./agent/... | grep -v /vendor/)
@@ -123,7 +123,9 @@ endef
 
 # TODO: use `go list -f` to target the test files more directly
 ALL_GO_FILES = $(shell find . -name "*.go" -print | tr "\n" " ")
-GO_INTEG_TEST = go test -race -tags integration -c -o
+
+GO_INTEG_TEST = go test -tags integration -c -o
+
 out/test-artifacts/linux-engine-tests: $(ALL_GO_FILES) .out-stamp .builder-image-stamp
 	$(call dockerbuild,$(GO_INTEG_TEST) $@ ./agent/engine)
 
@@ -235,10 +237,10 @@ cni-plugins: get-cni-sources .out-stamp
 	@echo "Built amazon-ecs-cni-plugins successfully."
 
 run-integ-tests: test-registry gremlin container-health-check-image run-sudo-tests
-	. ./scripts/shared_env && go test -race -tags integration -timeout=10m -v ./agent/engine/... ./agent/stats/... ./agent/app/...
+	. ./scripts/shared_env && go test -tags integration -timeout=20m -v ./agent/engine/... ./agent/stats/... ./agent/app/...agent
 
-run-sudo-tests:
-	. ./scripts/shared_env && sudo -E ${GO_EXECUTABLE} test -race -tags sudo -timeout=1m -v ./agent/engine/...
+run-sudo-tests::
+	. ./scripts/shared_env && sudo -E ${GO_EXECUTABLE} test -tags sudo -timeout=10m -v ./agent/engine/...
 
 .PHONY: codebuild
 codebuild: test-artifacts .out-stamp
