@@ -1,13 +1,39 @@
 {
-"family": "hostname-awsvpc",
-"networkMode": "awsvpc",
-    "containerDefinitions": [
-      {
-        "name": "exit",
-        "image": "127.0.0.1:51670/ubuntu:latest",
-        "cpu": 100,
-        "command":  [ "sh", "-c", "hostname | grep \"ip-[0-9]*-[0-9]*-[0-9]*-[0-9]*.*.compute.internal\"; if [ $? -eq 0 ]; then exit 0; else exit 1; fi" ],
-        "memory": 100,
-        "essential": true
-      }]
+    "family": "hostname-awsvpc",
+        "networkMode": "awsvpc",
+        "containerDefinitions": [
+        {
+            "name": "exit",
+            "image": "127.0.0.1:51670/ubuntu:latest",
+            "cpu": 100,
+            "command":  [ "sh", "-c", "hostname | grep \"ip-[0-9]*-[0-9]*-[0-9]*-[0-9]*.*.compute.internal\"; if [ $? -eq 0 ]; then exit 0; else exit 1; fi" ],
+            "memory": 100,
+            "essential": true,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/aws-vpleasec",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        },
+        {
+            "name": "print",
+            "image": "127.0.0.1:51670/ubuntu:latest",
+            "cpu": 100,
+            "command":  [ "sh", "-c", "hostname"],
+            "memory": 100,
+            "essential": true,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/aws-vpleasec",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+
+    ]
 }

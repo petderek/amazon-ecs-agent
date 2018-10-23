@@ -17,11 +17,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/cihub/seelog"
 )
 
 const (
@@ -86,7 +85,7 @@ func getTasksMetadata(client *http.Client, path string) (*TasksResponse, error) 
 		return nil, err
 	}
 
-	seelog.Infof("Received tasks metadata: %s \n", string(body))
+	log.Printf("Received tasks metadata: %s \n", string(body))
 
 	err = verifyTasksMetadata(body)
 	if err != nil {
@@ -108,7 +107,7 @@ func getTaskMetadata(client *http.Client, path string) (*TaskResponse, error) {
 		return nil, err
 	}
 
-	seelog.Infof("Received task metadata: %s \n", string(body))
+	log.Printf("Received task metadata: %s \n", string(body))
 
 	err = verifyTaskMetadata(body)
 	if err != nil {
@@ -225,12 +224,12 @@ func notEmptyErrMsg(fieldName string) error {
 func metadataResponse(client *http.Client, endpoint string, respType string) ([]byte, error) {
 	var resp []byte
 	var err error
-	for i := 0; i < maxRetries; i++ {
+	for i := 1; i <= maxRetries; i++ {
 		resp, err = metadataResponseOnce(client, endpoint, respType)
 		if err == nil {
 			return resp, nil
 		}
-		fmt.Fprintf(os.Stderr, "Attempt [%d/%d]: unable to get metadata response for '%s' from '%s': %v",
+		log.Printf("Attempt [%d/%d]: unable to get metadata response for '%s' from '%s': %v",
 			i, maxRetries, respType, endpoint, err)
 		time.Sleep(durationBetweenRetries)
 	}
