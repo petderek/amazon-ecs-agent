@@ -720,8 +720,6 @@ func (task *Task) updateTaskKnownStatus() (newStatus apitaskstatus.TaskStatus) {
 			containerEarliestKnownStatus.String(), task)
 		return apitaskstatus.TaskStatusNone
 	}
-	seelog.Debugf("Container with earliest known container is [%s] for task: %s",
-		earliestKnownStatusContainer.String(), task.String())
 	// If the essential container is stopped while other containers may be running
 	// don't update the task status until the other containers are stopped.
 	if earliestKnownStatusContainer.IsKnownSteadyState() && essentialContainerStopped {
@@ -736,7 +734,7 @@ func (task *Task) updateTaskKnownStatus() (newStatus apitaskstatus.TaskStatus) {
 	// statuses and compute the min of this
 	earliestKnownTaskStatus := task.getEarliestKnownTaskStatusForContainers()
 	if task.GetKnownStatus() < earliestKnownTaskStatus {
-		seelog.Debugf("Updating task's known status to: %s, task: %s",
+		seelog.Infoff("api/task: Updating task's known status to: %s, task: %s",
 			earliestKnownTaskStatus.String(), task.String())
 		task.SetKnownStatus(earliestKnownTaskStatus)
 		return task.GetKnownStatus()
@@ -1279,7 +1277,7 @@ func (task *Task) updateTaskDesiredStatusUnsafe() {
 	// Otherwise, the task's desired status is unchanged (typically running, but no need to change)
 	for _, cont := range task.Containers {
 		if cont.Essential && (cont.KnownTerminal() || cont.DesiredTerminal()) {
-			seelog.Debugf("Updating task desired status to stopped because of container: [%s]; task: [%s]",
+			seelog.Infof("api/task: Updating task desired status to stopped because of container: [%s]; task: [%s]",
 				cont.Name, task.stringUnsafe())
 			task.DesiredStatusUnsafe = apitaskstatus.TaskStopped
 		}
