@@ -875,7 +875,7 @@ func TestOnContainersUnableToTransitionStateForDesiredStoppedTask(t *testing.T) 
 		eventsGenerated.Done()
 	}()
 
-	task.onContainersUnableToTransitionState()
+	task.HandleContainersUnableToTransitionState()
 	eventsGenerated.Wait()
 
 	assert.Equal(t, task.GetDesiredStatus(), apitaskstatus.TaskStopped)
@@ -897,7 +897,7 @@ func TestOnContainersUnableToTransitionStateForDesiredRunningTask(t *testing.T) 
 		},
 	}
 
-	task.onContainersUnableToTransitionState()
+	task.HandleContainersUnableToTransitionState()
 	assert.Equal(t, task.GetDesiredStatus(), apitaskstatus.TaskStopped)
 	assert.Equal(t, task.Containers[0].GetDesiredStatus(), apicontainerstatus.ContainerStopped)
 }
@@ -1314,7 +1314,7 @@ func TestTaskWaitForExecutionCredentials(t *testing.T) {
 				go func() { task.acsMessages <- acsTransition{desiredStatus: apitaskstatus.TaskRunning} }()
 			}
 
-			assert.Equal(t, tc.result, task.waitForExecutionCredentialsFromACS(tc.errs), tc.msg)
+			assert.Equal(t, tc.result, task.isWaitingForACSExecutionCredentials(tc.errs), tc.msg)
 		})
 	}
 }
