@@ -98,7 +98,7 @@ func dependenciesCanBeResolved(target *apicontainer.Container, by []*apicontaine
 		nameMap[cont.Name] = cont
 	}
 
-	if err := verifyContainerOrderingStatusResolvable(target, nameMap, containerOrderingDependenciesCanResolve); err != nil {
+	if _,err := verifyContainerOrderingStatusResolvable(target, nameMap, containerOrderingDependenciesCanResolve); err != nil {
 		return false
 	}
 	return verifyStatusResolvable(target, nameMap, target.SteadyStateDependencies, onSteadyStateCanResolve)

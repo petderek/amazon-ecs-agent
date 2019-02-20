@@ -756,13 +756,10 @@ func (mtask *managedTask) progressTask() {
 		}
 		return
 	} else if len(blockedTransitions) > 0 {
-		for _, dependency := range blockedTransitions {
-			switch dependency.Condition {
-			case "COMPLETE", "SUCCESS":
-
-			case "HEALTHY":
-
-			}
+		for range blockedTransitions {
+			// lol idk
+			seelog.Errorf("Pausing forever")
+			time.Sleep(1000 * time.Second)
 		}
 	} else {
 
