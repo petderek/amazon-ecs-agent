@@ -758,7 +758,7 @@ func (mtask *managedTask) progressTask() {
 	} else if len(blockedTransitions) > 0 {
 		for _, dependency := range blockedTransitions {
 			switch dependency.Condition {
-			case "COMPLETE","SUCCESS":
+			case "COMPLETE", "SUCCESS":
 
 			case "HEALTHY":
 
