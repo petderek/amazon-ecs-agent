@@ -47,7 +47,7 @@ const (
 	// and start processing the task or start another round of waiting
 	waitForPullCredentialsTimeout         = 1 * time.Minute
 	defaultTaskSteadyStatePollInterval    = 5 * time.Minute
-	transitionPollTime                    = 30 * time.Second
+	transitionPollTime                    = 5 * time.Second
 	stoppedSentWaitInterval               = 30 * time.Second
 	maxStoppedWaitTimes                   = 72 * time.Hour / stoppedSentWaitInterval
 	taskUnableToTransitionToStoppedReason = "TaskStateError: Agent could not progress task's state to stopped"
@@ -763,7 +763,7 @@ func (mtask *managedTask) progressTask() {
 		ctx, cl := context.WithTimeout(context.Background(), transitionPollTime)
 		defer cl()
 		for timeout := mtask.waitEvent(ctx.Done()); !timeout; timeout = mtask.waitEvent(ctx.Done()) {
-			seelog.Errorf("Looping again")
+			continue
 		}
 		return
 	}
