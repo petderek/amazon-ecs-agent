@@ -764,7 +764,7 @@ func (mtask *managedTask) progressTask() {
 
 		// TODO: can we listen to the update channel? -- DONE
 		seelog.Info("Starting task check")
-		mtask.engine.checkTaskState(mtask.Task)
+		go mtask.engine.checkTaskState(mtask.Task)
 		seelog.Info("Stopping task check")
 	}
 
