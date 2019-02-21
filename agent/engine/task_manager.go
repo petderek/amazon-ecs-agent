@@ -763,13 +763,9 @@ func (mtask *managedTask) progressTask() {
 		// TODO: check if success/complete is resolved
 
 		// TODO: can we listen to the update channel? -- DONE
-		ctx, cl := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cl()
-		if timedOut := mtask.waitEvent(ctx.Done()); timedOut {
-			seelog.Info("Starting task check")
-			mtask.engine.checkTaskState(mtask.Task)
-			seelog.Info("Stopping task check")
-		}
+		seelog.Info("Starting task check")
+		mtask.engine.checkTaskState(mtask.Task)
+		seelog.Info("Stopping task check")
 	}
 
 	// combine the resource and container transitions
