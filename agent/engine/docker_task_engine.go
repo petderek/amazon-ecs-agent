@@ -259,7 +259,9 @@ func (engine *DockerTaskEngine) Shutdown() {
 
 // Disable prevents this engine from managing any additional tasks.
 func (engine *DockerTaskEngine) Disable() {
+	seelog.Info("Disabling lock")
 	engine.tasksLock.Lock()
+	seelog.Info("Done Disabling lock")
 }
 
 // isTaskManaged checks if task for the corresponding arn is present
@@ -431,9 +433,13 @@ func (engine *DockerTaskEngine) checkTaskState(task *apitask.Task) {
 			continue
 		}
 		status, metadata := engine.client.DescribeContainer(engine.ctx, dockerContainer.DockerID)
+		seelog.Info("Grabbing lock checktaskstate")
 		engine.tasksLock.RLock()
+		seelog.Info("Done grabbing lock checktaskstate")
 		managedTask, ok := engine.managedTasks[task.Arn]
+		seelog.Info("Releasing lock checktaskstate")
 		engine.tasksLock.RUnlock()
+		seelog.Info("Done releasing lock checktaskstate")
 
 		if ok {
 			managedTask.emitDockerContainerChange(dockerContainerChange{

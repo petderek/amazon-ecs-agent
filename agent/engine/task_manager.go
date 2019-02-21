@@ -755,35 +755,37 @@ func (mtask *managedTask) progressTask() {
 			mtask.HandleContainersUnableToTransitionState()
 		}
 		return
-	} else if !atLeastOneTransitionStarted && len(blockedTransitions) > 0 {
+	}
+
+	if !atLeastOneTransitionStarted && len(blockedTransitions) > 0 {
 		// TODO: check if StartTimeout is elapsed
-		// TODO: check if healthcheck is updated
+		// TODO: check if healthcheck is updated -- DONE
 		// TODO: check if success/complete is resolved
 
-		// TODO: can we listen to the update channel?
-		ctx, cl := context.WithTimeout(context.Background(), 10 * time.Second)
+		// TODO: can we listen to the update channel? -- DONE
+		ctx, cl := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cl()
 		if timedOut := mtask.waitEvent(ctx.Done()); timedOut {
 			seelog.Info("Starting task check")
 			mtask.engine.checkTaskState(mtask.Task)
 			seelog.Info("Stopping task check")
 		}
-	} else {
-
-		// combine the resource and container transitions
-		transitions := make(map[string]string)
-		for k, v := range resTransitions {
-			transitions[k] = v
-		}
-		for k, v := range contTransitions {
-			transitions[k] = v.String()
-		}
-
-		// We've kicked off one or more transitions, wait for them to
-		// complete, but keep reading events as we do. in fact, we have to for
-		// transitions to complete
-		mtask.waitForTransition(transitions, transitionChange, transitionChangeEntity)
 	}
+
+	// combine the resource and container transitions
+	transitions := make(map[string]string)
+	for k, v := range resTransitions {
+		transitions[k] = v
+	}
+	for k, v := range contTransitions {
+		transitions[k] = v.String()
+	}
+
+	// We've kicked off one or more transitions, wait for them to
+	// complete, but keep reading events as we do. in fact, we have to for
+	// transitions to complete
+	mtask.waitForTransition(transitions, transitionChange, transitionChangeEntity)
+
 	// update the task status
 	changed := mtask.UpdateStatus()
 	if changed {
