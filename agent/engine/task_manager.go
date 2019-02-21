@@ -756,11 +756,18 @@ func (mtask *managedTask) progressTask() {
 		}
 		return
 	} else if !atLeastOneTransitionStarted && len(blockedTransitions) > 0 {
-		//for range blockedTransitions {
-			// lol idk
-			seelog.Errorf("Pausing for like 10 seconds")
-			time.Sleep(10 * time.Second)
-		//}
+		// TODO: check if StartTimeout is elapsed
+		// TODO: check if healthcheck is updated
+		// TODO: check if success/complete is resolved
+
+		// TODO: can we listen to the update channel?
+		ctx, cl := context.WithTimeout(context.Background(), 10 * time.Second)
+		defer cl()
+		if timedOut := mtask.waitEvent(ctx.Done()); timedOut {
+			seelog.Info("Starting task check")
+			mtask.engine.checkTaskState(mtask.Task)
+			seelog.Info("Stopping task check")
+		}
 	} else {
 
 		// combine the resource and container transitions
@@ -838,6 +845,8 @@ func (mtask *managedTask) startContainerTransitions(transitionFunc containerTran
 
 		// At least one container is able to be moved forwards, so we're not deadlocked
 		anyCanTransition = true
+
+		// TODO (MAYBE) might need to put logic here to update health
 
 		if !transition.actionRequired {
 			// Updating the container status without calling any docker API, send in
