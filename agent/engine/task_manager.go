@@ -47,6 +47,7 @@ const (
 	// and start processing the task or start another round of waiting
 	waitForPullCredentialsTimeout         = 1 * time.Minute
 	defaultTaskSteadyStatePollInterval    = 5 * time.Minute
+	transitionPollTime                    = 30 * time.Second
 	stoppedSentWaitInterval               = 30 * time.Second
 	maxStoppedWaitTimes                   = 72 * time.Hour / stoppedSentWaitInterval
 	taskUnableToTransitionToStoppedReason = "TaskStateError: Agent could not progress task's state to stopped"
@@ -758,58 +759,12 @@ func (mtask *managedTask) progressTask() {
 	}
 
 	if !atLeastOneTransitionStarted && len(blockedTransitions) > 0 {
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		idToType := make(map[string]apicontainer.DependsOn)
-		for _, dependency := range blockedTransitions {
-			dockerContainers, _ := mtask.engine.state.ContainerMapByArn(mtask.Arn)
-			dockerContainer, ok := dockerContainers[dependency.Container]
-			if !ok {
-				continue
-			}
-			idToType[dockerContainer.DockerID] = dependency
+		go mtask.engine.checkTaskState(mtask.Task)
+		ctx, cl := context.WithTimeout(context.Background(), transitionPollTime)
+		defer cl()
+		for timeout := mtask.waitEvent(ctx.Done()); !timeout; timeout = mtask.waitEvent(ctx.Done()) {
+			seelog.Errorf("Looping again")
 		}
-
-		// open the event stream and wait for good things to happen
-		events, err := mtask.engine.client.ContainerEvents(ctx)
-		if err != nil {
-			seelog.Errorf("This should not break and now i am very sad")
-			return
-		}
-
-		for satisfied := false; !satisfied; {
-			select {
-			case event := <-events:
-				dependency, ok := idToType[event.DockerID]
-				if !ok {
-					continue
-				}
-				switch dependency.Condition {
-				case "SUCCESS", "COMPLETE":
-					satisfied = event.Status.Terminal()
-
-				case "HEALTHY":
-					satisfied = event.Health.Status == apicontainerstatus.ContainerHealthy
-				}
-				if satisfied {
-					actualContainer, ok := mtask.ContainerByName(dependency.Container)
-					if !ok {
-						seelog.Errorf(":(")
-					}
-					go mtask.emitDockerContainerChange(dockerContainerChange{
-						container: actualContainer,
-						event: dockerapi.DockerContainerChangeEvent{
-							Status:                  event.Status,
-							DockerContainerMetadata: event.DockerContainerMetadata,
-						},
-					})
-				}
-
-			}
-		}
-
 	}
 
 	// combine the resource and container transitions
