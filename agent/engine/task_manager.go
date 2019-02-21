@@ -765,6 +765,7 @@ func (mtask *managedTask) progressTask() {
 		for timeout := mtask.waitEvent(ctx.Done()); !timeout; timeout = mtask.waitEvent(ctx.Done()) {
 			seelog.Errorf("Looping again")
 		}
+		return
 	}
 
 	// combine the resource and container transitions
