@@ -39,7 +39,7 @@ import (
 
 	"github.com/cihub/seelog"
 	"github.com/pkg/errors"
-)
+	)
 
 const (
 	// waitForPullCredentialsTimeout is the timeout agent trying to wait for pull
@@ -758,14 +758,31 @@ func (mtask *managedTask) progressTask() {
 	}
 
 	if !atLeastOneTransitionStarted && len(blockedTransitions) > 0 {
-		// TODO: check if StartTimeout is elapsed
-		// TODO: check if healthcheck is updated -- DONE
-		// TODO: check if success/complete is resolved
 
-		// TODO: can we listen to the update channel? -- DONE
-		seelog.Info("Starting task check")
-		go mtask.engine.checkTaskState(mtask.Task)
-		seelog.Info("Stopping task check")
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		done := make(chan error)
+		
+		for _, dependency := range blockedTransitions {
+			dockerContainers, _ := mtask.engine.state.ContainerMapByArn(mtask.Arn)
+			dockerContainer, ok := dockerContainers[dependency.Container]
+			if !ok {
+				continue
+			}
+			status, metadata := mtask.engine.client.DescribeContainer(ctx, dockerContainer.DockerID)
+			switch dependency.Condition {
+			case "SUCCESS","COMPLETE":
+				if status.Terminal() {
+					<-done
+				}
+
+			case "HEALTHY":
+				if metadata.Health.Status == apicontainerstatus.ContainerHealthy {
+					<-done
+				}
+			}
+		}
+
 	}
 
 	// combine the resource and container transitions
