@@ -39,7 +39,7 @@ import (
 
 	"github.com/cihub/seelog"
 	"github.com/pkg/errors"
-	)
+)
 
 const (
 	// waitForPullCredentialsTimeout is the timeout agent trying to wait for pull
@@ -761,25 +761,52 @@ func (mtask *managedTask) progressTask() {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		done := make(chan error)
-		
+
+		idToType := make(map[string]apicontainer.DependsOn)
 		for _, dependency := range blockedTransitions {
 			dockerContainers, _ := mtask.engine.state.ContainerMapByArn(mtask.Arn)
 			dockerContainer, ok := dockerContainers[dependency.Container]
 			if !ok {
 				continue
 			}
-			status, metadata := mtask.engine.client.DescribeContainer(ctx, dockerContainer.DockerID)
-			switch dependency.Condition {
-			case "SUCCESS","COMPLETE":
-				if status.Terminal() {
-					<-done
+			idToType[dockerContainer.DockerID] = dependency
+		}
+
+		// open the event stream and wait for good things to happen
+		events, err := mtask.engine.client.ContainerEvents(ctx)
+		if err != nil {
+			seelog.Errorf("This should not break and now i am very sad")
+			return
+		}
+
+		for satisfied := false; !satisfied; {
+			select {
+			case event := <-events:
+				dependency, ok := idToType[event.DockerID]
+				if !ok {
+					continue
+				}
+				switch dependency.Condition {
+				case "SUCCESS", "COMPLETE":
+					satisfied = event.Status.Terminal()
+
+				case "HEALTHY":
+					satisfied = event.Health.Status == apicontainerstatus.ContainerHealthy
+				}
+				if satisfied {
+					actualContainer, ok := mtask.ContainerByName(dependency.Container)
+					if !ok {
+						seelog.Errorf(":(")
+					}
+					go mtask.emitDockerContainerChange(dockerContainerChange{
+						container: actualContainer,
+						event: dockerapi.DockerContainerChangeEvent{
+							Status:                  event.Status,
+							DockerContainerMetadata: event.DockerContainerMetadata,
+						},
+					})
 				}
 
-			case "HEALTHY":
-				if metadata.Health.Status == apicontainerstatus.ContainerHealthy {
-					<-done
-				}
 			}
 		}
 
