@@ -755,7 +755,7 @@ func (mtask *managedTask) progressTask() {
 			mtask.HandleContainersUnableToTransitionState()
 		}
 		return
-	} else if len(blockedTransitions) > 0 {
+	} else if !atLeastOneTransitionStarted && len(blockedTransitions) > 0 {
 		for range blockedTransitions {
 			// lol idk
 			seelog.Errorf("Pausing forever")
