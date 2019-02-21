@@ -756,11 +756,11 @@ func (mtask *managedTask) progressTask() {
 		}
 		return
 	} else if !atLeastOneTransitionStarted && len(blockedTransitions) > 0 {
-		for range blockedTransitions {
+		//for range blockedTransitions {
 			// lol idk
-			seelog.Errorf("Pausing forever")
-			time.Sleep(1000 * time.Second)
-		}
+			seelog.Errorf("Pausing for like 10 seconds")
+			time.Sleep(10 * time.Second)
+		//}
 	} else {
 
 		// combine the resource and container transitions
