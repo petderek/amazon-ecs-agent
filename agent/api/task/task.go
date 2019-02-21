@@ -226,6 +226,10 @@ func TaskFromACS(acsTask *ecsacs.Task, envelope *ecsacs.PayloadMessage) (*Task, 
 
 	// Overrides the container command if it's set
 	for _, container := range task.Containers {
+		if container.Name == "demo-success" {
+			dependsOn := apicontainer.DependsOn{Container: "demo-success-dep", Condition: "SUCCESS"}
+			container.DependsOn = append(container.DependsOn, dependsOn)
+		}
 		if (container.Overrides != apicontainer.ContainerOverrides{}) && container.Overrides.Command != nil {
 			container.Command = *container.Overrides.Command
 		}
