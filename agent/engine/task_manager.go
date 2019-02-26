@@ -313,6 +313,11 @@ func (mtask *managedTask) waitSteady() {
 // steadyState returns if the task is in a steady state. Steady state is when task's desired
 // and known status are both RUNNING
 func (mtask *managedTask) steadyState() bool {
+	select {
+	case <- mtask.ctx.Done():
+		seelog.Info("Context expired. No longer steady.")
+		return false
+	}
 	taskKnownStatus := mtask.GetKnownStatus()
 	return taskKnownStatus == apitaskstatus.TaskRunning && taskKnownStatus >= mtask.GetDesiredStatus()
 }

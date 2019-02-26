@@ -40,7 +40,7 @@ func TestDependencyHealthCheck(t *testing.T) {
 	dependency := createTestContainerWithImageAndName(baseImageForOS, "dependency")
 
 	parent.EntryPoint = &entryPointForOS
-	parent.Command = []string{"exit 1"}
+	parent.Command = []string{"sleep 5 && exit 1"}
 	parent.DependsOn = []apicontainer.DependsOn{
 		{
 			ContainerName: "dependency",
@@ -49,7 +49,7 @@ func TestDependencyHealthCheck(t *testing.T) {
 	}
 
 	dependency.EntryPoint = &entryPointForOS
-	dependency.Command = []string{"sleep 30"}
+	dependency.Command = []string{"sleep 60"}
 	dependency.HealthCheckType = apicontainer.DockerHealthCheckType
 	dependency.DockerConfig.Config = aws.String(alwaysHealthyHealthCheckConfig)
 
