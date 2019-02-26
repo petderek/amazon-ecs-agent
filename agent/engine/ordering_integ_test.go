@@ -49,7 +49,7 @@ func TestDependencyHealthCheck(t *testing.T) {
 	}
 
 	dependency.EntryPoint = &entryPointForOS
-	dependency.Command = []string{"sleep 60"}
+	dependency.Command = []string{"sleep 60 && exit 0"}
 	dependency.HealthCheckType = apicontainer.DockerHealthCheckType
 	dependency.DockerConfig.Config = aws.String(alwaysHealthyHealthCheckConfig)
 
