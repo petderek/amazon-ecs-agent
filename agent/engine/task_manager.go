@@ -314,12 +314,13 @@ func (mtask *managedTask) waitSteady() {
 // and known status are both RUNNING
 func (mtask *managedTask) steadyState() bool {
 	select {
-	case <- mtask.ctx.Done():
+	case <-mtask.ctx.Done():
 		seelog.Info("Context expired. No longer steady.")
 		return false
+	default:
+		taskKnownStatus := mtask.GetKnownStatus()
+		return taskKnownStatus == apitaskstatus.TaskRunning && taskKnownStatus >= mtask.GetDesiredStatus()
 	}
-	taskKnownStatus := mtask.GetKnownStatus()
-	return taskKnownStatus == apitaskstatus.TaskRunning && taskKnownStatus >= mtask.GetDesiredStatus()
 }
 
 // cleanupCredentials removes credentials for a stopped task

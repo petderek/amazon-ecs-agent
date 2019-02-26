@@ -44,7 +44,7 @@ func TestDependencyHealthCheck(t *testing.T) {
 	parent.DependsOn = []apicontainer.DependsOn{
 		{
 			ContainerName: "dependency",
-			Condition: "HEALTHY",
+			Condition:     "HEALTHY",
 		},
 	}
 
@@ -97,7 +97,7 @@ func TestDependencyComplete(t *testing.T) {
 	parent.DependsOn = []apicontainer.DependsOn{
 		{
 			ContainerName: "dependency",
-			Condition: "COMPLETE",
+			Condition:     "COMPLETE",
 		},
 	}
 
@@ -150,7 +150,7 @@ func TestDependencySuccess(t *testing.T) {
 	parent.DependsOn = []apicontainer.DependsOn{
 		{
 			ContainerName: "dependency",
-			Condition: "SUCCESS",
+			Condition:     "SUCCESS",
 		},
 	}
 
@@ -203,7 +203,7 @@ func TestDependencySuccessErrored(t *testing.T) {
 	parent.DependsOn = []apicontainer.DependsOn{
 		{
 			ContainerName: "dependency",
-			Condition: "SUCCESS",
+			Condition:     "SUCCESS",
 		},
 	}
 
@@ -250,7 +250,7 @@ func TestDependencySuccessTimeout(t *testing.T) {
 	parent.DependsOn = []apicontainer.DependsOn{
 		{
 			ContainerName: "dependency",
-			Condition: "SUCCESS",
+			Condition:     "SUCCESS",
 		},
 	}
 
@@ -300,7 +300,7 @@ func TestDependencyHealthyTimeout(t *testing.T) {
 	parent.DependsOn = []apicontainer.DependsOn{
 		{
 			ContainerName: "dependency",
-			Condition: "HEALTHY",
+			Condition:     "HEALTHY",
 		},
 	}
 
