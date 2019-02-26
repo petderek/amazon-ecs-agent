@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-const orderingTimeout = 60 * time.Second
+const orderingTimeout = 90 * time.Second
 
 // TestDependencyHealthCheck is a happy-case integration test that considers a workflow with a HEALTHY dependency
 // condition. We ensure that the task can be both started and stopped.
