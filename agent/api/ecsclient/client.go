@@ -446,6 +446,7 @@ func (client *APIECSClient) SubmitContainerStateChange(change api.ContainerState
 		Cluster:       &client.config.Cluster,
 		Task:          &change.TaskArn,
 		ContainerName: &change.ContainerName,
+		// TODO: add imageDigest
 	}
 	if change.RuntimeID != "" {
 		trimmedRuntimeID := trimString(change.RuntimeID, ecsMaxRuntimeIDLength)

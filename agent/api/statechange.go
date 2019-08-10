@@ -40,6 +40,8 @@ type ContainerStateChange struct {
 	ContainerName string
 	// Status is the status to send
 	Status apicontainerstatus.ContainerStatus
+	// ImageID is the sha-256 digest of the container image as pulled from the repository
+	ImageID string
 
 	// Reason may contain details of why the container stopped
 	Reason string
@@ -144,6 +146,7 @@ func NewContainerStateChangeEvent(task *apitask.Task, cont *apicontainer.Contain
 		Status:        contKnownStatus.BackendStatus(cont.GetSteadyStateStatus()),
 		ExitCode:      cont.GetKnownExitCode(),
 		PortBindings:  cont.GetKnownPortBindings(),
+		ImageID:       cont.ImageID,
 		Reason:        reason,
 		Container:     cont,
 	}
