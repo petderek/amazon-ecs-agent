@@ -18,6 +18,7 @@ func main() {
 	tls := flag.Bool("tls", false, "use tls")
 	ro := flag.Bool("ro", false, "readonly")
 	t := flag.Int("t", 10, "number of seconds to delay unmount")
+	net := flag.Int("netns", 0, "the netns pid to swap to")
 	flag.Parse()
 	src := flag.Arg(0)
 	mnt := flag.Arg(1)
@@ -54,7 +55,9 @@ func main() {
 		TransitEncryption: *tls,
 		ReadOnly:          *ro,
 		LocalTarget:       mnt,
+		NetNSPid:          *net,
 	}
+
 	var err error
 	err = efsThing.Mount()
 	if err != nil {

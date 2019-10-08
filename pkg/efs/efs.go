@@ -26,6 +26,7 @@ type EFSMounter struct {
 	ReadOnly          bool
 	RootDirectory     string
 	LocalTarget       string
+	NetNSPid          int
 }
 
 func (m *EFSMounter) Mount() error {
@@ -40,6 +41,11 @@ func (m *EFSMounter) Mount() error {
 	remoteTarget := fmt.Sprintf("%s:%s", m.Filesystem, filepath.Join("/", m.RootDirectory))
 	mountcmd := exec.Command("mount.efs", remoteTarget, m.LocalTarget, "-o", optstring)
 	mountcmd.Stderr = os.Stderr
+
+	if m.NetNSPid != 0 {
+		return WithNetNS(m.NetNSPid, mountcmd.Run)
+	}
+
 	return mountcmd.Run()
 }
 
