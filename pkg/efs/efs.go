@@ -1,10 +1,8 @@
 package efs
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 const (
@@ -21,25 +19,26 @@ func findEFSBin() string {
 }
 
 type EFSMounter struct {
-	Filesystem        string
-	TransitEncryption bool
-	ReadOnly          bool
-	RootDirectory     string
-	LocalTarget       string
-	NetNSPid          int
+	MountType string
+	Device    string
+	Target    string
+	Options   string
+	NetNSPid  int
 }
 
 func (m *EFSMounter) Mount() error {
 	optstring := "hard"
-	if m.TransitEncryption {
-		optstring += ",tls"
+	args := make([]string, 0)
+	if m.MountType != "" {
+		args = append(args, "-t", m.MountType)
 	}
-	if m.ReadOnly {
-		optstring += ",ro"
+	if m.Options != "" {
+		args = append(args, "-o", m.Options)
 	}
+	args = append(args, m.Device, m.Target)
 
-	remoteTarget := fmt.Sprintf("%s:%s", m.Filesystem, filepath.Join("/", m.RootDirectory))
-	mountcmd := exec.Command("mount.efs", remoteTarget, m.LocalTarget, "-o", optstring)
+	mountcmd := exec.Command("mount")
+	mountcmd.Args = args
 	mountcmd.Stderr = os.Stderr
 
 	if m.NetNSPid != 0 {
@@ -55,6 +54,6 @@ func (m *EFSMounter) Unmount() error {
 		return err
 	}
 
-	umountCmd := exec.Command(path, m.LocalTarget)
+	umountCmd := exec.Command(path, m.Target)
 	return umountCmd.Run()
 }
