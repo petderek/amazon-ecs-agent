@@ -1,10 +1,10 @@
 .PHONY: all clean
 all: efs-debug efs-plugin
 
-efs-debug: cmd/efs-debug/*.go
+efs-debug: cmd/efs-debug/*.go *.go
 	go build ./cmd/efs-debug
 
-efs-plugin: cmd/efs-plugin/*.go
+efs-plugin: cmd/efs-plugin/*.go *.go
 	go build ./cmd/efs-plugin
 
 clean:

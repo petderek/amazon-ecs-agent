@@ -1,8 +1,10 @@
 package efs
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 const (
@@ -27,8 +29,7 @@ type EFSMounter struct {
 }
 
 func (m *EFSMounter) Mount() error {
-	optstring := "hard"
-	args := make([]string, 0)
+	args := []string{}
 	if m.MountType != "" {
 		args = append(args, "-t", m.MountType)
 	}
@@ -36,16 +37,35 @@ func (m *EFSMounter) Mount() error {
 		args = append(args, "-o", m.Options)
 	}
 	args = append(args, m.Device, m.Target)
-
-	mountcmd := exec.Command("mount")
-	mountcmd.Args = args
+	mountcmd := exec.Command("mount", args...)
 	mountcmd.Stderr = os.Stderr
+
+	if err := m.Validate(); err != nil {
+		return err
+	}
 
 	if m.NetNSPid != 0 {
 		return WithNetNS(m.NetNSPid, mountcmd.Run)
 	}
 
 	return mountcmd.Run()
+}
+
+func (m *EFSMounter) Validate() error {
+	requiredFields := []string{}
+	if m.MountType == "" {
+		requiredFields = append(requiredFields, "mountType")
+	}
+	if m.Device == "" {
+		requiredFields = append(requiredFields, "device")
+	}
+	if m.Target == "" {
+		requiredFields = append(requiredFields, "target")
+	}
+	if len(requiredFields) > 0 {
+		return fmt.Errorf("missing required fields: [%s]", strings.Join(requiredFields, ","))
+	}
+	return nil
 }
 
 func (m *EFSMounter) Unmount() error {

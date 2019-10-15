@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	driver := &efs.EFSVolumeDriver{}
+	driver := efs.NewEFSVolumeDriver()
 	handler := volume.NewHandler(driver)
 	rootUser, _ := user.Lookup("root")
 	gid, _ := strconv.Atoi(rootUser.Gid)

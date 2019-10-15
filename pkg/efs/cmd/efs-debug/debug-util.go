@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -33,29 +32,30 @@ func main() {
 		log.Printf("mount path is %s", path)
 	}
 
-	infos, _ := ioutil.ReadDir("/mnt")
-	str := strings.Builder{}
-	for i, info := range infos {
-		if i > 0 {
-			str.WriteString(", ")
-		}
-		str.WriteString(info.Name())
-	}
-
-	log.Printf("ls: %s", str.String())
-
 	log.Printf("src: %s, mnt: %s", src, mnt)
 	log.Printf("tls: %t, ro: %t", *tls, *ro)
 
 	if src == "" || mnt == "" {
 		log.Fatal("source and mount must both be set")
 	}
+
+	opts := []string{}
+	if *tls {
+		opts = append(opts, "tls")
+	}
+
+	if *ro {
+		opts = append(opts, "ro")
+	}
+
+	optstring := strings.Join(opts, ",")
+
 	efsThing := &efs.EFSMounter{
-		Filesystem:        src,
-		TransitEncryption: *tls,
-		ReadOnly:          *ro,
-		LocalTarget:       mnt,
-		NetNSPid:          *net,
+		MountType: "efs",
+		Device:    src,
+		Target:    mnt,
+		Options:   optstring,
+		NetNSPid:  *net,
 	}
 
 	var err error
