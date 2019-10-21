@@ -10,8 +10,8 @@ import (
 )
 
 type EFSVolumeDriver struct {
-	worstDatabase      map[string]*EFSMounter
-	okayestConcurrency sync.RWMutex
+	worstDatabase map[string]*EFSMounter
+	lock          sync.RWMutex
 }
 
 func NewEFSVolumeDriver() *EFSVolumeDriver {
@@ -48,8 +48,8 @@ func (e *EFSVolumeDriver) Create(r *volume.CreateRequest) error {
 	}
 
 	log.Printf("Creating %s with options (%s) ", r.Name, opts)
-	e.okayestConcurrency.Lock()
-	defer e.okayestConcurrency.Unlock()
+	e.lock.Lock()
+	defer e.lock.Unlock()
 	if _, ok := e.worstDatabase[r.Name]; ok {
 		return fmt.Errorf("Volume already exists: %s", r.Name)
 	}
@@ -58,8 +58,8 @@ func (e *EFSVolumeDriver) Create(r *volume.CreateRequest) error {
 }
 
 func (e *EFSVolumeDriver) List() (*volume.ListResponse, error) {
-	e.okayestConcurrency.RLock()
-	defer e.okayestConcurrency.RUnlock()
+	e.lock.RLock()
+	defer e.lock.RUnlock()
 	vols := make([]*volume.Volume, len(e.worstDatabase))
 	i := 0
 	for k, _ := range e.worstDatabase {
@@ -86,8 +86,8 @@ func (e *EFSVolumeDriver) Get(req *volume.GetRequest) (*volume.GetResponse, erro
 }
 
 func (e *EFSVolumeDriver) Remove(req *volume.RemoveRequest) error {
-	e.okayestConcurrency.Lock()
-	defer e.okayestConcurrency.Unlock()
+	e.lock.Lock()
+	defer e.lock.Unlock()
 	mnt, ok := e.worstDatabase[req.Name]
 	if !ok {
 		return fmt.Errorf("Volume %s not found.")
@@ -96,8 +96,8 @@ func (e *EFSVolumeDriver) Remove(req *volume.RemoveRequest) error {
 }
 
 func (e *EFSVolumeDriver) Path(req *volume.PathRequest) (*volume.PathResponse, error) {
-	e.okayestConcurrency.Lock()
-	defer e.okayestConcurrency.RUnlock()
+	e.lock.Lock()
+	defer e.lock.RUnlock()
 	mnt, ok := e.worstDatabase[req.Name]
 	if !ok {
 		return nil, fmt.Errorf("Volume %s not found.")
@@ -107,9 +107,8 @@ func (e *EFSVolumeDriver) Path(req *volume.PathRequest) (*volume.PathResponse, e
 }
 
 func (e *EFSVolumeDriver) Mount(req *volume.MountRequest) (*volume.MountResponse, error) {
-	// find ns
-	e.okayestConcurrency.RLock()
-	defer e.okayestConcurrency.RUnlock()
+	e.lock.RLock()
+	defer e.lock.RUnlock()
 	mnt, ok := e.worstDatabase[req.Name]
 	if !ok {
 		return nil, fmt.Errorf("Volume %s not found.", req.Name)
@@ -121,12 +120,12 @@ func (e *EFSVolumeDriver) Mount(req *volume.MountRequest) (*volume.MountResponse
 		return nil, err
 	}
 
-	return &volume.MountResponse{"/mnt/efs"}, nil
+	return &volume.MountResponse{mnt.Target}, nil
 }
 
 func (e *EFSVolumeDriver) Unmount(req *volume.UnmountRequest) error {
-	e.okayestConcurrency.RLock()
-	defer e.okayestConcurrency.RUnlock()
+	e.lock.RLock()
+	defer e.lock.RUnlock()
 	mnt, ok := e.worstDatabase[req.Name]
 	if !ok {
 		return fmt.Errorf("Volume %s not found.", req.Name)
@@ -136,6 +135,6 @@ func (e *EFSVolumeDriver) Unmount(req *volume.UnmountRequest) error {
 }
 
 func (e *EFSVolumeDriver) Capabilities() *volume.CapabilitiesResponse {
-	log.Println("capabilities")
+	log.Println("capabilities doesn't return anything meaningful")
 	return nil
 }
