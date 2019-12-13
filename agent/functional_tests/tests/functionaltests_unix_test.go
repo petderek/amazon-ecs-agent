@@ -1363,7 +1363,7 @@ func TestRunEFSVolumeTask(t *testing.T) {
 	os.Setenv("ECS_FTEST_FORCE_NET_HOST", "true")
 	defer os.Unsetenv("ECS_FTEST_FORCE_NET_HOST")
 
-	if IsEFSCapable() {
+	if !IsEFSCapable() {
 		t.Skip("Skip TestRunEFSVolumeTask in unsupported region")
 	}
 
