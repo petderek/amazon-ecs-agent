@@ -20,8 +20,7 @@
         {
             "name": "task-efs-shared",
             "efsVolumeConfiguration" : {
-                    "fileSystemId": "FILESYSTEM_ID"
-                }
+                "fileSystemId": "FILESYSTEM_ID"
             }
         }
     ]
