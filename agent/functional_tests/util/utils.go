@@ -993,7 +993,7 @@ func WaitNetworkInterfaceCount(desiredCount int, timeout time.Duration) error {
 	}
 }
 
-func IsEFSCapable() {
+func IsEFSCapable() bool {
 	// TODO: make this list betterer
 	// Grabbed from the following page on 12/12/2019
 	// https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/
