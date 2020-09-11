@@ -509,6 +509,7 @@ func environmentConfig() (Config, error) {
 	}
 	return Config{
 		Cluster:                             os.Getenv("ECS_CLUSTER"),
+		NoIID:                               utils.ParseBool(os.Getenv("NO_IID"), false),
 		APIEndpoint:                         os.Getenv("ECS_BACKEND_HOST"),
 		AWSRegion:                           os.Getenv("AWS_DEFAULT_REGION"),
 		DockerEndpoint:                      os.Getenv("DOCKER_HOST"),
